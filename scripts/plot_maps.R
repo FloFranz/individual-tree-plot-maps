@@ -1,7 +1,8 @@
 #-------------------------------------------------------------------------------
 # Name:         plot_maps.R
 # Description:  Creation of plot maps containing the individual tree positions
-#               relative to the center point of each plot.
+#               relative to the center point of each plot. Tree species and
+#               and diameter at breast height (DBH) are provided for each tree.
 # Author:       Florian Franz
 # Contact:      florian.franz@nw-fva.de
 #-------------------------------------------------------------------------------
@@ -29,6 +30,8 @@ bi_plots_rtk <- sf::st_read(file.path(raw_data_dir, 'bi_center_points_rtk.gpkg')
 # read VPC
 als_vpc <- sf::st_read(file.path(raw_data_dir, 'leafoff.vpc'))
 head(als_vpc)
+
+
 
 # 02: prepare data for plot maps
 #-------------------------------------------------------------------------------
@@ -85,7 +88,7 @@ bi_points_trees_aoi <- bi_points_trees_aoi %>%
 
 
 
-# 03: Overview map of the plots in the AOI
+# 03: overview map of all plots in the AOI
 #-------------------------------------------------------------------------------
 
 # get all plots within AOI and add remeasured status
@@ -100,15 +103,22 @@ plot_centers_all_aoi$remeasured <- ifelse(
   'yes', 'no'
 )
 
-mapview::mapview(als_vpc_2d$geometry, alpha.regions = 0, map.type = 'OpenStreetMap') +
-  mapview::mapview(plot_centers_all_aoi, zcol = 'remeasured', cex = 5, layer.name = 'already remeasured')
+mapview::mapview(
+  als_vpc_2d$geometry,
+  alpha.regions = 0,
+  map.type = 'OpenStreetMap') +
+  mapview::mapview(
+    plot_centers_all_aoi,
+    zcol = 'remeasured',
+    cex = 5,
+    layer.name = 'already remeasured')
 
 
 
+# 04: creation of plot maps
+#-------------------------------------------------------------------------------
 
-
-
-# example: create a plot map for the first plot
+# function to create example plot map
 create_plot_map <- function(plot_id, tree_data, plot_centers) {
   
   # filter data for specific plot
@@ -119,71 +129,97 @@ create_plot_map <- function(plot_id, tree_data, plot_centers) {
     dplyr::filter(kspnr == plot_id)
   
   if(nrow(plot_trees) == 0) {
-    warning(paste("No trees found for plot", plot_id))
+    warning(paste('No trees found for plot', plot_id))
     return(NULL)
   }
   
   p <- ggplot() +
+    
+    # draw sample circles (6m and 13m radius)
+    annotate('path',
+             x = 6 * cos(seq(0, 2*pi, length.out = 100)),
+             y = 6 * sin(seq(0, 2*pi, length.out = 100)),
+             color = 'gray50',
+             linetype = 'dashed',
+             linewidth = 1) + 
+    annotate('path',
+             x = 13 * cos(seq(0, 2*pi, length.out = 100)),
+             y = 13 * sin(seq(0, 2*pi, length.out = 100)),
+             color = 'gray30',
+             linetype = 'dashed',
+             linewidth = 1) + 
+    
     # add trees as points
     geom_point(
       data = plot_trees,
-      aes(x = rel_x, y = rel_y, color = bagr, size = bhd),
-      alpha = 0.7
+      aes(x = rel_x, y = rel_y, color = bagr, 
+          size = bhd),
+      alpha = 0.7,
+      position = position_jitter(width = 0.1, height = 0.1)
     ) +
+    
+    # add DBH labels on each tree
+    geom_text(
+      data = plot_trees,
+      aes(x = rel_x, y = rel_y, label = round(bhd, 1)),
+      size = 5,
+      color = 'black',
+      position = position_jitter(width = 0.1, height = 0.1) 
+    ) +
+    
     # add center point
     geom_point(
       aes(x = 0, y = 0),
-      color = "red", 
+      color = 'black', 
       size = 3, 
       shape = 3
     ) +
-    # add sample circles (6m and 13m radius) using annotate
-    annotate("path",
-             x = 6 * cos(seq(0, 2*pi, length.out = 100)),
-             y = 6 * sin(seq(0, 2*pi, length.out = 100)),
-             color = "gray50",
-             linetype = "dashed") +
-    annotate("path",
-             x = 13 * cos(seq(0, 2*pi, length.out = 100)),
-             y = 13 * sin(seq(0, 2*pi, length.out = 100)),
-             color = "gray30",
-             linetype = "dashed") +
-    # styling
+
     coord_equal() +
-    scale_size_continuous(
-      name = "DBH (cm)",
-      range = c(1, 6),
-      guide = guide_legend(override.aes = list(alpha = 1))
+    
+    # individual tree scaling - each tree gets unique size based on its DBH
+    scale_size_identity(name = 'DBH (cm)') +
+    
+    # fixed color scale for consistent tree species colors across all plots
+    scale_color_manual(
+      name = 'Tree Species',
+      values = c(
+        'EI' = '#1f77b4',
+        'BU' = '#ff7f0e', 
+        'ALH' = '#2ca02c',
+        'ALN' = '#d62728',
+        'FI' = '#9467bd', 
+        'DGL' = '#8c564b',
+        'KI' = '#e377c2',    
+        'LAE' = '#7f7f7f'    
+      ),
+      drop = F 
     ) +
-    scale_color_discrete(name = "Tree Species") +
+    
     labs(
-      title = paste("Plot Map - Plot ID:", plot_id),
-      subtitle = paste("Number of trees:", nrow(plot_trees)),
-      x = "Relative X Position (m)",
-      y = "Relative Y Position (m)"
+      title = paste('Plot Map - Kspnr:', plot_id),
+      subtitle = paste('Number of trees:', nrow(plot_trees)),
+      x = 'Relative X Position (m)',
+      y = 'Relative Y Position (m)'
     ) +
     theme_minimal() +
     theme(
       panel.grid.minor = element_blank(),
-      legend.position = "right"
+      legend.position = 'right'
     )
   
   return(p)
+  
 }
 
-# create example plot for first plot
+# create example plot
 if(nrow(bi_points_trees_aoi) > 0) {
-  first_plot_id <- unique(bi_points_trees_aoi$kspnr)[1]
+  
+  first_plot_id <- unique(bi_points_trees_aoi$kspnr)[89]
   example_plot <- create_plot_map(first_plot_id, bi_points_trees_aoi, plot_centers_aoi)
   
   if(!is.null(example_plot)) {
     print(example_plot)
     
-    # optionally save the plot
-    # ggsave(
-    #   filename = paste0("output/plot_map_", first_plot_id, ".png"),
-    #   plot = example_plot,
-    #   width = 10, height = 8, dpi = 300
-    # )
   }
 }
