@@ -1,0 +1,94 @@
+---
+title: "Calculating Individual Tree Positions"
+subtitle: "Methodology for Computing Tree Coordinates from Polar Measurements"
+author: Florian Franz
+format: 
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: cosmo
+    code-fold: true
+editor: visual
+---
+
+## Overview
+
+This document describes the methodology for calculating individual tree coordinates from polar measurements (angle and distance) collected during forest inventory. The calculation transforms polar coordinates relative to plot center points into absolute UTM coordinates.
+
+## Input Data
+
+The calculation requires data from two main sources that are linked through plot identifiers:
+
+### Tree Data (`tbl_DatPh2_Vorr_ZE`)
+
+-   **Angle**: Column `DatPh2_Vorr_Richtung` (direction in gon)
+-   **Distance**: Column `DatPh2_Vorr_Abstand` (distance in cm)
+-   **Plot ID**: Column `DatPh2_KSPNr` (for linking with coordinate data)
+
+### Plot Center Coordinates (`tblDatPh2_ZE`)
+
+-   **X Coordinate**: Column `DatPh2_RW` (Gauss-Krüger)
+-   **Y Coordinate**: Column `DatPh2_HW` (Gauss-Krüger)\
+-   **Plot ID**: Column `DatPh2_KSPNr` (links to tree data)
+
+### Data Linking
+
+The two tables are joined using the `KSPNr` column.
+
+## Data Preparation
+
+### Unit Conversions
+
+#### Angle Conversion from Gon
+
+The measurement angles are recorded in gon and need conversion:
+
+**To Degrees:** $$\text{angle}_{[\text{degrees}]} = \frac{\text{angle}_{[\text{gon}]} \times 360}{400}$$
+
+**To Radians:** $$\text{angle}_{[\text{radians}]} = \frac{\text{angle}_{[\text{gon}]} \times 2\pi}{400}$$
+
+::: callout-note
+The choice between degrees and radians depends on the trigonometric functions used in the software environment. Most programming languages (R, Python) use radians for trigonometric functions.
+:::
+
+#### Distance Conversion
+
+Distances are recorded in centimeters and converted to meters:
+
+$$\text{distance}_{[\text{m}]} = \frac{\text{distance}_{[\text{cm}]}}{100}$$
+
+## Coordinate Calculation
+
+### Mathematical Formula
+
+Individual tree coordinates are calculated using polar-to-Cartesian coordinate transformation:
+
+$$X_{\text{tree}} = X_{\text{plot}} + \text{distance}_{[\text{m}]} \times \sin(\text{angle}_{[\text{rad}]})$$
+
+$$Y_{\text{tree}} = Y_{\text{plot}} + \text{distance}_{[\text{m}]} \times \cos(\text{angle}_{[\text{rad}]})$$
+
+Where:\
+- $X_{\text{tree}}, Y_{\text{tree}}$ = individual tree coordinates (Gauss-Krüger)\
+- $X_{\text{plot}}, Y_{\text{plot}}$ = plot center coordinates (Gauss-Krüger)\
+- $\text{distance}_{[\text{m}]}$ = horizontal distance from plot center to tree (in meters)\
+- $\text{angle}_{[\text{rad}]}$ = azimuth angle from plot center to tree (in radians)
+
+### Coordinate System Convention
+
+This calculation uses a two-step coordinate system approach:
+
+#### Step 1: Initial Calculation (Gauss-Krüger Zone 3)
+
+The polar-to-Cartesian transformation is performed in **Gauss-Krüger Zone 3** coordinates (EPSG:31467): - **X-axis**: Rechtswert (Easting, positive eastward)\
+- **Y-axis**: Hochwert (Northing, positive northward)\
+- **Angle reference**: 0° = North, measured clockwise (gon system)\
+- **Trigonometric convention**: sin() for X-component, cos() for Y-component
+
+#### Step 2: Coordinate Transformation (to UTM)
+
+After calculating individual tree positions in Gauss-Krüger coordinates, the results are transformed to **ETRS89/UTM Zone 32N** (EPSG:25832) for standardized output and compatibility with modern GIS systems.
+
+::: callout-important
+The mathematical formulas above apply to the initial Gauss-Krüger calculation. The final UTM coordinates are obtained through a subsequent coordinate system transformation using appropriate geodetic transformation parameters.
+:::
