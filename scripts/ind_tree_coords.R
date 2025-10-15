@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # Name:         ind_tree_coords.R
-# Description:  Individual tree coordinates are calculated relative to the
-#               center point of the plot. 
+# Description:  Individual tree coordinates are calculated based on the distance
+#               and angle to the center point of each plot. 
 # Author:       Florian Franz
 # Contact:      florian.franz@nw-fva.de
 #-------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ bi_points_trees$nha <- ifelse(
 # 03: individual tree coordinates (ITC) calculation
 #-------------------------------------------------------------------------------
 
-# calculate ITC
+# calculate ITC (see folder docs/ for explanation of the method)
 bi_points_trees$gk3_x <- bi_points_trees$rw + bi_points_trees$abstand / 100 * sin((bi_points_trees$richtung * 2 * pi) / 400)
 bi_points_trees$gk3_y <- bi_points_trees$hw + bi_points_trees$abstand / 100 * cos((bi_points_trees$richtung * 2 * pi) / 400)
 
