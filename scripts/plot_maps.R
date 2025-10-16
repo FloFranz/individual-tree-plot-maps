@@ -86,6 +86,12 @@ bi_points_trees_aoi <- bi_points_trees_aoi %>%
     rel_y = tree_y - center_y
   )
 
+# write to disk
+sf::st_write(
+  bi_points_trees_aoi,
+  file.path(processed_data_dir, 'bi_trees_not_remeasured.gpkg')
+  )
+
 
 
 # 03: overview map of all plots in the AOI
