@@ -80,7 +80,8 @@ This calculation uses a two-step coordinate system approach:
 
 #### Step 1: Initial Calculation (Gauss-Krüger Zone 3)
 
-The polar-to-Cartesian transformation is performed in **Gauss-Krüger Zone 3** coordinates (EPSG:31467): - **X-axis**: Rechtswert (Easting, positive eastward)\
+The polar-to-Cartesian transformation is performed in **Gauss-Krüger Zone 3** coordinates (EPSG:31467):  
+- **X-axis**: Rechtswert (Easting, positive eastward)\
 - **Y-axis**: Hochwert (Northing, positive northward)\
 - **Angle reference**: 0° = North, measured clockwise (gon system)\
 - **Trigonometric convention**: sin() for X-component, cos() for Y-component
