@@ -7,8 +7,8 @@ Additionally, the repository includes code for generating plot maps that visuali
 
 ## Example Plot Maps
 
-<img src="docs/images/plot_map_28857.png" width="750">
+<img src="docs/images/plot_map_28857.PNG" width="750">
 
-<img src="docs/images/plot_map_29205.png" width="750">
+<img src="docs/images/plot_map_29205.PNG" width="750">
 
-<img src="docs/images/plot_map_49483.png" width="750">
+<img src="docs/images/plot_map_49483.PNG" width="750">
