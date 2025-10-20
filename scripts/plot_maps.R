@@ -159,7 +159,7 @@ create_plot_map <- function(plot_id, tree_data, plot_centers) {
     geom_point(
       data = plot_trees,
       aes(x = rel_x, y = rel_y, color = bagr, 
-          size = bhd),
+          size = bhd * 0.5),
       alpha = 0.7,
       position = position_jitter(width = 0.1, height = 0.1)
     ) +
@@ -168,7 +168,7 @@ create_plot_map <- function(plot_id, tree_data, plot_centers) {
     geom_text(
       data = plot_trees,
       aes(x = rel_x, y = rel_y, label = round(bhd, 1)),
-      size = 5,
+      size = 3,
       color = 'black',
       position = position_jitter(width = 0.1, height = 0.1) 
     ) +
