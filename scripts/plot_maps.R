@@ -229,3 +229,35 @@ if(nrow(bi_points_trees_aoi) > 0) {
     
   }
 }
+
+# iterate over all
+# get all unique plot IDs (kspnr)
+plot_ids <- unique(bi_points_trees_aoi$kspnr)
+
+# loop through all plots and save each as a separate PDF
+for (id in plot_ids) {
+  
+  # create plot
+  p <- create_plot_map(id, bi_points_trees_aoi, plot_centers_aoi)
+  
+  # check if plot was successfully created
+  if (!is.null(p)) {
+    
+    # define output file path
+    filename <- file.path(output_dir, paste0('plot_map_', id, '.pdf'))
+    
+    # save plot as a PDF
+    ggsave(
+      filename = filename,
+      plot = p,
+      device = 'pdf',
+      width = 8,
+      height = 8
+    )
+    
+    message('Saved: ', filename)
+    
+  } else {
+    warning('No plot created for kspnr ', id)
+  }
+}
