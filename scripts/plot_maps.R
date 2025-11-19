@@ -78,12 +78,14 @@ bi_points_trees_aoi <- bi_points_trees_utm %>%
   dplyr::inner_join(plot_centers_aoi, by = 'kspnr')
 
 # calculate relative positions of the individual trees from plot center
+# and their relative distance from plot center
 bi_points_trees_aoi <- bi_points_trees_aoi %>%
   dplyr::mutate(
     tree_x = sf::st_coordinates(.)[,1],
     tree_y = sf::st_coordinates(.)[,2],
     rel_x = tree_x - center_x,
-    rel_y = tree_y - center_y
+    rel_y = tree_y - center_y,
+    rel_distance = sqrt(rel_x^2 + rel_y^2)
   )
 
 # write to disk
@@ -180,6 +182,31 @@ create_plot_map <- function(plot_id, tree_data, plot_centers) {
       size = 3, 
       shape = 3
     ) +
+    
+    # add distance lines from center to each tree
+    geom_segment(
+      data = plot_trees,
+      aes(x = 0, y = 0, xend = rel_x, yend = rel_y),
+      color = 'gray30',
+      alpha = 0.7,
+      linewidth = 0.5
+    ) +
+    
+    # add distance (in m) on each line
+    geom_text(
+      data = plot_trees %>%
+        dplyr::mutate(
+          line_angle = atan2(rel_y, rel_x),
+          offset_x = rel_x * 0.5 + 0.3 * sin(line_angle),
+          offset_y = rel_y * 0.5 - 0.3 * cos(line_angle)
+        ),
+      aes(x = offset_x, y = offset_y, 
+          label = paste0(round(rel_distance, 1), 'm')),
+      size = 3,
+      color = 'gray30',
+      alpha = 0.7,
+      angle = atan2(plot_trees$rel_y, plot_trees$rel_x) * 180 / pi
+    ) +
 
     coord_equal() +
     
@@ -221,7 +248,7 @@ create_plot_map <- function(plot_id, tree_data, plot_centers) {
 # create example plot
 if(nrow(bi_points_trees_aoi) > 0) {
   
-  first_plot_id <- unique(bi_points_trees_aoi$kspnr)[89]
+  first_plot_id <- unique(bi_points_trees_aoi$kspnr)[3]
   example_plot <- create_plot_map(first_plot_id, bi_points_trees_aoi, plot_centers_aoi)
   
   if(!is.null(example_plot)) {
