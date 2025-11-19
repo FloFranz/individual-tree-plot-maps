@@ -93,3 +93,4 @@ After calculating individual tree positions in Gauss-Krüger coordinates, the re
 ::: callout-important
 The mathematical formulas above apply to the initial Gauss-Krüger calculation. The final UTM coordinates are obtained through a subsequent coordinate system transformation using appropriate geodetic transformation parameters.
 :::
+
